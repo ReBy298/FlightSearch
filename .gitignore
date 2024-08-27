@@ -1,32 +1,32 @@
-<<<<<<< HEAD
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+Front-End/node_modules
+
 /.pnp
 .pnp.js
 
 # testing
-/coverage
+Front-End/coverage
 
 # production
-/build
+Front-End/build
 
 # misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+Front-End/.DS_Store
+Front-End/.env.local
+Front-End/.env.development.local
+Front-End/.env.test.local
+Front-End/.env.production.local
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-=======
+Front-End/npm-debug.log*
+Front-End/yarn-debug.log*
+Front-End/yarn-error.log*
+
 HELP.md
 .gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
+Back-End/build/
+!Back-End/gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -60,4 +60,3 @@ out/
 
 ### VS Code ###
 .vscode/
->>>>>>> Back-End/main
