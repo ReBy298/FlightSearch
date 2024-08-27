@@ -12,9 +12,6 @@ COPY public ./
 # Instala las dependencias
 RUN npm install
 
-# Copia el resto de los archivos
-COPY . .
-
 # Expone el puerto que usará la aplicación
 EXPOSE 3000
 
