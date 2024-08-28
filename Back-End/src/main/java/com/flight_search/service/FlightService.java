@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,22 +54,44 @@ public class FlightService {
         body.add("client_secret", apiSecret);
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
-
-        return (String) response.getBody().get("access_token");
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+            String accessToken = (String) response.getBody().get("access_token");
+            System.out.println("Access Token: " + accessToken);
+            return accessToken;
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            System.err.println("Error obtaining access token: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            throw e;
+        } catch (ResourceAccessException e) {
+            System.err.println("Connection error: " + e.getMessage());
+            throw new RuntimeException("Failed to connect to Amadeus API", e);
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            throw new RuntimeException("Failed to obtain access token", e);
+        }
     }
+
 
     public List<FlightDTO> searchFlights(String origin, String destination, String departureDate, int adults, int max) {
         String url = "https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=" + origin + 
                      "&destinationLocationCode=" + destination + "&departureDate=" + departureDate +
                      "&adults=" + adults + "&max=" + max;
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + getAccessToken());
+        String accessToken = getAccessToken();
+        headers.set("Authorization", "Bearer " + accessToken);
         HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-
-        return parseFlights(response.getBody());
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            return parseFlights(response.getBody());
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            System.err.println("Error searching flights: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            throw new RuntimeException("Failed to search flights", e);
+        }
     }
+
 
     private List<FlightDTO> parseFlights(String jsonResponse) {
         List<FlightDTO> flightDTOs = new ArrayList<>();
@@ -105,6 +130,24 @@ public class FlightService {
             e.printStackTrace();
         }
         return flightDTOs;
+    }
+    
+    public String getAirlineDetails(String airlineCode) {
+        String url = "https://test.api.amadeus.com/v1/reference-data/airlines?airlineCodes=" + airlineCode;
+        HttpHeaders headers = new HttpHeaders();
+        String accessToken = getAccessToken();
+        headers.set("Authorization", "Bearer " + accessToken);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            return response.getBody();
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            System.err.println("Error fetching airline details: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch airline details", e);
+        }
     }
 }
 
