@@ -7,9 +7,6 @@ WORKDIR /Back-End
 # Copia los archivos del proyecto al contenedor
 COPY . .
 
-# Ejecuta el comando de construcción de Gradle
-RUN ./gradlew build
-
 # Copia el archivo JAR generado por Gradle al contenedor
 COPY build/libs/*.jar app.jar
 
