@@ -27,7 +27,7 @@ const FlightSearch: React.FC = () => {
                     method: 'GET',
                     headers: {
                         "Content-Type": "application/json",
-                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Origin': 'http://localhost:3000',
                         "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
                         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
                         }

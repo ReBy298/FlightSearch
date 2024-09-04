@@ -15,7 +15,6 @@ import java.util.Arrays;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
     @SuppressWarnings({})
@@ -25,8 +24,12 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests((requests) -> requests
                 .requestMatchers("/api/flights/**").permitAll()
-                .anyRequest()
+                .anyRequest().authenticated()
         );
+        // http
+        //     .authorizeHttpRequests((authz) -> authz
+        //         .anyRequest().authenticated()
+        //     );
         return http.build();
     }
 

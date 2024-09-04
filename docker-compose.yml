@@ -1,6 +1,7 @@
 
 services:
   frontend:
+    image: flight-search-frontend
     build:
       context: ./Front-End
       dockerfile: Dockerfile
@@ -9,6 +10,7 @@ services:
     container_name: frontend_container
 
   backend:
+    image: flight-search-backend
     build:
       context: ./Back-End
       dockerfile: Dockerfile
