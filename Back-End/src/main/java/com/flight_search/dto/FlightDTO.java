@@ -3,6 +3,7 @@ package com.flight_search.dto;
 import java.util.List;
 
 public class FlightDTO {
+	private String id;
     private String initialDepartureDateTime;
     private String finalArrivalDateTime;
     private String departureAirportName;
@@ -21,6 +22,12 @@ public class FlightDTO {
     private PriceBreakdownDTO priceBreakdown;
     
     
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 	public PriceBreakdownDTO getPriceBreakdown() {
 		return priceBreakdown;
 	}

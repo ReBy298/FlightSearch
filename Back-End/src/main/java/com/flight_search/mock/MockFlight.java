@@ -679,7 +679,7 @@ public class MockFlight {
 	 public String getMockAirport() {
 	        return  "{\n" +
 	                "  \"meta\": {\n" +
-	                "    \"count\": 1,\n" +
+	                "    \"count\": 3,\n" +
 	                "    \"links\": {\n" +
 	                "      \"self\": \"https://test.api.amadeus.com/v1/reference-data/locations?subType=AIRPORT&keyword=MUC&countryCode=DE\"\n" +
 	                "    }\n" +
@@ -713,6 +713,68 @@ public class MockFlight {
 	                "      \"analytics\": {\n" +
 	                "        \"travelers\": {\n" +
 	                "          \"score\": 27\n" +
+	                "        }\n" +
+	                "      }\n" +
+	                "    },\n" +
+	                "    {\n" +
+	                "      \"type\": \"location\",\n" +
+	                "      \"subType\": \"AIRPORT\",\n" +
+	                "      \"name\": \"FRANKFURT INTERNATIONAL\",\n" +
+	                "      \"detailedName\": \"FRANKFURT/DE:FRANKFURT INTERNATIONAL\",\n" +
+	                "      \"id\": \"AFRA\",\n" +
+	                "      \"self\": {\n" +
+	                "        \"href\": \"https://test.api.amadeus.com/v1/reference-data/locations/AFRA\",\n" +
+	                "        \"methods\": [\n" +
+	                "          \"GET\"\n" +
+	                "        ]\n" +
+	                "      },\n" +
+	                "      \"timeZoneOffset\": \"+02:00\",\n" +
+	                "      \"iataCode\": \"FRA\",\n" +
+	                "      \"geoCode\": {\n" +
+	                "        \"latitude\": 50.03793,\n" +
+	                "        \"longitude\": 8.56215\n" +
+	                "      },\n" +
+	                "      \"address\": {\n" +
+	                "        \"cityName\": \"FRANKFURT\",\n" +
+	                "        \"cityCode\": \"FRA\",\n" +
+	                "        \"countryName\": \"GERMANY\",\n" +
+	                "        \"countryCode\": \"DE\",\n" +
+	                "        \"regionCode\": \"EUROP\"\n" +
+	                "      },\n" +
+	                "      \"analytics\": {\n" +
+	                "        \"travelers\": {\n" +
+	                "          \"score\": 30\n" +
+	                "        }\n" +
+	                "      }\n" +
+	                "    },\n" +
+	                "    {\n" +
+	                "      \"type\": \"location\",\n" +
+	                "      \"subType\": \"AIRPORT\",\n" +
+	                "      \"name\": \"BERLIN TEGEL\",\n" +
+	                "      \"detailedName\": \"BERLIN/DE:BERLIN TEGEL\",\n" +
+	                "      \"id\": \"ABER\",\n" +
+	                "      \"self\": {\n" +
+	                "        \"href\": \"https://test.api.amadeus.com/v1/reference-data/locations/ABER\",\n" +
+	                "        \"methods\": [\n" +
+	                "          \"GET\"\n" +
+	                "        ]\n" +
+	                "      },\n" +
+	                "      \"timeZoneOffset\": \"+02:00\",\n" +
+	                "      \"iataCode\": \"TXL\",\n" +
+	                "      \"geoCode\": {\n" +
+	                "        \"latitude\": 52.55972,\n" +
+	                "        \"longitude\": 13.28771\n" +
+	                "      },\n" +
+	                "      \"address\": {\n" +
+	                "        \"cityName\": \"BERLIN\",\n" +
+	                "        \"cityCode\": \"BER\",\n" +
+	                "        \"countryName\": \"GERMANY\",\n" +
+	                "        \"countryCode\": \"DE\",\n" +
+	                "        \"regionCode\": \"EUROP\"\n" +
+	                "      },\n" +
+	                "      \"analytics\": {\n" +
+	                "        \"travelers\": {\n" +
+	                "          \"score\": 25\n" +
 	                "        }\n" +
 	                "      }\n" +
 	                "    }\n" +

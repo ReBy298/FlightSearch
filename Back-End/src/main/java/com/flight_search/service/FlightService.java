@@ -2,6 +2,8 @@ package com.flight_search.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flight_search.dto.AirlineDTO;
+import com.flight_search.dto.AirportDTO;
 import com.flight_search.dto.AmenityDTO;
 import com.flight_search.dto.FeeDTO;
 import com.flight_search.dto.FlightDTO;
@@ -41,308 +43,370 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class FlightService {
 
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final MockFlight mockFlight;
+	private final RestTemplate restTemplate;
+	private final ObjectMapper objectMapper;
+	private final MockFlight mockFlight;
 
+	@Value("${amadeus.api.key}")
+	private String apiKey;
 
-    @Value("${amadeus.api.key}")
-    private String apiKey;
+	@Value("${amadeus.api.secret}")
+	private String apiSecret;
 
-    @Value("${amadeus.api.secret}")
-    private String apiSecret;
-    
-    private String flightSearch = "https://test.api.amadeus.com/v2/shopping/flight-offers?";
-    
+	private String flightSearch = "https://test.api.amadeus.com/v2/shopping/flight-offers?";
 
-    public FlightService(RestTemplateBuilder restTemplateBuilder, ObjectMapper objectMapper, MockFlight mockFlight) {
-        this.restTemplate = restTemplateBuilder.build();
-        this.objectMapper = objectMapper;
-        this.mockFlight = mockFlight;
-    }
-    
-    private String getAccessToken() {
-        String url = "https://test.api.amadeus.com/v1/security/oauth2/token";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+	public FlightService(RestTemplateBuilder restTemplateBuilder, ObjectMapper objectMapper, MockFlight mockFlight) {
+		this.restTemplate = restTemplateBuilder.build();
+		this.objectMapper = objectMapper;
+		this.mockFlight = mockFlight;
+	}
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "client_credentials");
-        body.add("client_id", apiKey);
-        body.add("client_secret", apiSecret);
+	private String getAccessToken() {
+		String url = "https://test.api.amadeus.com/v1/security/oauth2/token";
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
-        try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
-            String accessToken = (String) response.getBody().get("access_token");
-            System.out.println("Access Token: " + accessToken);
-            return accessToken;
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            System.err.println("Error obtaining access token: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
-            throw e;
-        } catch (ResourceAccessException e) {
-            System.err.println("Connection error: " + e.getMessage());
-            throw new RuntimeException("Failed to connect to Amadeus API", e);
-        } catch (Exception e) {
-            System.err.println("Unexpected error: " + e.getMessage());
-            throw new RuntimeException("Failed to obtain access token", e);
-        }
-    }
-    
-    
-    /*
+		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+		body.add("grant_type", "client_credentials");
+		body.add("client_id", apiKey);
+		body.add("client_secret", apiSecret);
 
-    public List<FlightDTO> getFlights(String origin, String destination, String departureDate, int adults, int max, String token) {
-        try {
-            String URL = "shopping/flight-offers?" +
-                    "originLocationCode=" + origin +
-                    "&destinationLocationCode=" + destination +
-                    "&departureDate=" + departureDate +
-                    "&adults=" + adults +
-                    "&nonStop=false" +
-                    "&currencyCode=USD" +
-                    "&max=" + max;
+		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+		try {
+			ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+			String accessToken = (String) response.getBody().get("access_token");
+			System.out.println("Access Token: " + accessToken);
+			return accessToken;
+		} catch (HttpClientErrorException | HttpServerErrorException e) {
+			System.err
+					.println("Error obtaining access token: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+			throw e;
+		} catch (ResourceAccessException e) {
+			System.err.println("Connection error: " + e.getMessage());
+			throw new RuntimeException("Failed to connect to Amadeus API", e);
+		} catch (Exception e) {
+			System.err.println("Unexpected error: " + e.getMessage());
+			throw new RuntimeException("Failed to obtain access token", e);
+		}
+	}
 
-            URI URIRequest = new URI(flightSearch + URL);
+	/*
+	 * 
+	 * public List<FlightDTO> getFlights(String origin, String destination, String
+	 * departureDate, int adults, int max, String token) { try { String URL =
+	 * "shopping/flight-offers?" + "originLocationCode=" + origin +
+	 * "&destinationLocationCode=" + destination + "&departureDate=" + departureDate
+	 * + "&adults=" + adults + "&nonStop=false" + "&currencyCode=USD" + "&max=" +
+	 * max;
+	 * 
+	 * URI URIRequest = new URI(flightSearch + URL);
+	 * 
+	 * HttpRequest getRequest = HttpRequest.newBuilder() .uri(URIRequest)
+	 * .header("Content-Type", "application/x-www-form-urlencoded")
+	 * .header("Authorization", "Bearer " + token) .GET() .build();
+	 * 
+	 * HttpClient httpClient = HttpClient.newHttpClient(); HttpResponse<String>
+	 * response = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+	 * 
+	 * if (response.statusCode() == 200) { return
+	 * convertToDTO(parseFlights(response.body())); }
+	 * 
+	 * throw new RuntimeException("Failed to fetch flight offers: " +
+	 * response.toString()); } catch (Exception e) { throw new RuntimeException(e);
+	 * } }
+	 */
 
-            HttpRequest getRequest = HttpRequest.newBuilder()
-                    .uri(URIRequest)
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .header("Authorization", "Bearer " + token)
-                    .GET()
-                    .build();
+	/*
+	 * 
+	 * public List<FlightDTO> getFlights(String origin, String destination, String
+	 * departureDate, int adults, boolean nonStop, int max, boolean nonStop, String
+	 * currency) { try { String URL = "shopping/flight-offers?" +
+	 * "originLocationCode=" + origin + "&destinationLocationCode=" + destination +
+	 * "&departureDate=" + departureDate + "&adults=" + adults + "&nonStop=false" +
+	 * "&currencyCode=USD" + "&max=" + max;
+	 * 
+	 * URI URIRequest = new URI(flightSearch + URL); HttpHeaders headers = new
+	 * HttpHeaders(); String accessToken = getAccessToken();
+	 * headers.set("Authorization", "Bearer " + accessToken); HttpEntity<String>
+	 * entity = new HttpEntity<>(headers); try { ResponseEntity<String> response =
+	 * restTemplate.exchange(URIRequest, HttpMethod.GET, entity, String.class);
+	 * List<FlightOffer> flightOffers = parseFlights(response.getBody());
+	 * List<FlightDTO> flightDTOs = convertToDTO(flightOffers, currency);
+	 * 
+	 * // sortFlights(flightDTOs, sortBy);
+	 * 
+	 * return flightDTOs;
+	 * 
+	 * return parseFlights(); } catch (HttpClientErrorException |
+	 * HttpServerErrorException e) { System.err.println("Error searching flights: "
+	 * + e.getStatusCode() + " " + e.getResponseBodyAsString()); throw e; } catch
+	 * (Exception e) { System.err.println("Unexpected error: " + e.getMessage());
+	 * throw new RuntimeException("Failed to search flights", e); } }
+	 */
 
-            HttpClient httpClient = HttpClient.newHttpClient();
-            HttpResponse<String> response = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+	public List<FlightDTO> getFlights(String origin, String destination, String departureDate, String returnDate,
+			int adults, int max, String currency, boolean nonStop) {
+		if (isDateInPast(departureDate) || (returnDate != null && isDateInPast(returnDate))
+				|| (returnDate != null && isReturnDateBeforeDepartureDate(departureDate, returnDate))) {
+			throw new IllegalArgumentException("Invalid dates");
+		}
 
-            if (response.statusCode() == 200) {
-                return convertToDTO(parseFlights(response.body()));
-            }
+		String jsonResponse = mockFlight.getMockFlightOffers();
+		List<FlightOffer> flightOffers = parseFlights(jsonResponse);
 
-            throw new RuntimeException("Failed to fetch flight offers: " + response.toString());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }*/
-    
-    
-    /*
-     
-     public List<FlightDTO> getFlights(String origin, String destination, String departureDate, int adults, boolean nonStop, int max, boolean nonStop, String currency) {
-        try {
-            String URL = "shopping/flight-offers?" +
-                    "originLocationCode=" + origin +
-                    "&destinationLocationCode=" + destination +
-                    "&departureDate=" + departureDate +
-                    "&adults=" + adults +
-                    "&nonStop=false" +
-                    "&currencyCode=USD" +
-                    "&max=" + max;
+		List<FlightDTO> flightDTOs = convertToDTO(flightOffers, currency);
 
-        URI URIRequest = new URI(flightSearch + URL);
-        HttpHeaders headers = new HttpHeaders();
-        String accessToken = getAccessToken();
-        headers.set("Authorization", "Bearer " + accessToken);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(URIRequest, HttpMethod.GET, entity, String.class);
-            List<FlightOffer> flightOffers = parseFlights(response.getBody());
-            List<FlightDTO> flightDTOs = convertToDTO(flightOffers, currency);
+		// sortFlights(flightDTOs, sortBy);
 
-        	// sortFlights(flightDTOs, sortBy);
+		return flightDTOs;
+	}
 
-        	return flightDTOs;
-            
-            return parseFlights();
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            System.err.println("Error searching flights: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
-            throw e;
-        } catch (Exception e) {
-            System.err.println("Unexpected error: " + e.getMessage());
-            throw new RuntimeException("Failed to search flights", e);
-        }
-    }
-    */
-    
-    
-    
-    public List<FlightDTO> getFlights(String origin, String destination, String departureDate, String returnDate, int adults, int max, String currency, boolean nonStop) {
-        if (isDateInPast(departureDate) || (returnDate != null && isDateInPast(returnDate)) || (returnDate != null && isReturnDateBeforeDepartureDate(departureDate, returnDate))) {
-            throw new IllegalArgumentException("Invalid dates");
-        }
+	public List<AirlineDTO> getAirlines() {
 
-        String jsonResponse = mockFlight.getMockFlightOffers();
-        List<FlightOffer> flightOffers = parseFlights(jsonResponse);
+		String jsonResponse = mockFlight.getMockAirline();
+		List<AirlineDTO> airlinesDTO = parseAirlines(jsonResponse);
 
- 
-        List<FlightDTO> flightDTOs = convertToDTO(flightOffers, currency);
+		return airlinesDTO;
+	}
 
-        // sortFlights(flightDTOs, sortBy);
+	private List<AirlineDTO> parseAirlines(String jsonResponse) {
+		List<AirlineDTO> airlines = new ArrayList<>();
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode root = objectMapper.readTree(jsonResponse);
+			JsonNode data = root.path("data");
 
-        return flightDTOs;
-    }
+			for (JsonNode airlineNode : data) {
+				AirlineDTO airline = new AirlineDTO();
+				airline.setIataCode(airlineNode.path("iataCode").asText());
+				airline.setBussinessName(airlineNode.path("businessName").asText());
+				airlines.add(airline);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return airlines;
+	}
 
-    private boolean isDateInPast(String date) {
-    
-    	return false;
-    }
+	private String getAirlineNameByCode(List<AirlineDTO> airlines, String iataCode) {
+		for (AirlineDTO airline : airlines) {
+			if (airline.getIataCode().equals(iataCode)) {
+				return airline.getBussinessName();
+			}
+		}
+		return "Unknown Airline";
+	}
 
-    private boolean isReturnDateBeforeDepartureDate(String departureDate, String returnDate) {
-       
-    	return false;
-    }
-    
-    private List<FlightOffer> parseFlights(String jsonResponse) {
-        List<FlightOffer> flightOffers = new ArrayList<>();
-        try {
-            JsonNode root = objectMapper.readTree(jsonResponse);
-            JsonNode data = root.path("data");
+	public List<AirportDTO> getAirports() {
 
-            for (JsonNode flightNode : data) {
-                FlightOffer flightOffer = objectMapper.treeToValue(flightNode, FlightOffer.class);
-                flightOffers.add(flightOffer);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return flightOffers;
-    }
+		String jsonResponse = mockFlight.getMockAirport();
+		List<AirportDTO> airportsDTO = parseAirports(jsonResponse);
 
+		return airportsDTO;
+	}
 
-    private List<FlightDTO> convertToDTO(List<FlightOffer> flightOffers, String currency) {
-        List<FlightDTO> flightDTOs = new ArrayList<>();
-        for (FlightOffer flightOffer : flightOffers) {
-            FlightDTO flightDTO = new FlightDTO();
-            
-            // Set initial and final departure/arrival times
-            flightDTO.setInitialDepartureDateTime(flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getAt());
-            flightDTO.setFinalArrivalDateTime(flightOffer.getItineraries().get(0).getSegments().get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getAt());
+	private List<AirportDTO> parseAirports(String jsonResponse) {
+		List<AirportDTO> airports = new ArrayList<>();
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode root = objectMapper.readTree(jsonResponse);
+			JsonNode data = root.path("data");
 
-            // Set airport names and codes
-            flightDTO.setDepartureAirportName("Boston Logan International Airport"); // Example, replace with actual name
-            flightDTO.setDepartureAirportCode(flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getIataCode());
-            flightDTO.setArrivalAirportName("Newark Liberty International Airport"); // Example, replace with actual name
-            flightDTO.setArrivalAirportCode(flightOffer.getItineraries().get(0).getSegments().get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getIataCode());
+			for (JsonNode airportNode : data) {
+				AirportDTO airport = new AirportDTO();
+				airport.setIataCode(airportNode.path("iataCode").asText());
+				airport.setName(airportNode.path("name").asText());
+				airports.add(airport);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return airports;
+	}
+	
+	private String getAirportNameByCode(List<AirportDTO> airports, String iataCode) {
+	    for (AirportDTO airport : airports) {
+	        if (airport.getIataCode().equals(iataCode)) {
+	            return airport.getName();
+	        }
+	    }
+	    return "Unknown Airport";
+	}
 
-            // Set airline names and codes
-            flightDTO.setAirlineName("United Airlines"); // Example, replace with actual name
-            flightDTO.setAirlineCode(flightOffer.getItineraries().get(0).getSegments().get(0).getCarrierCode());
-            if (!flightOffer.getItineraries().get(0).getSegments().get(0).getCarrierCode().equals(flightOffer.getItineraries().get(0).getSegments().get(0).getOperating().getCarrierCode())) {
-                flightDTO.setOperatingAirlineName("United Airlines"); // Example, replace with actual name
-                flightDTO.setOperatingAirlineCode(flightOffer.getItineraries().get(0).getSegments().get(0).getOperating().getCarrierCode());
-            }
+	private boolean isDateInPast(String date) {
 
-            // Set total flight time
-            flightDTO.setTotalFlightTime(flightOffer.getItineraries().get(0).getDuration());
+		return false;
+	}
 
-            // Set stops
-            List<StopDTO> stops = new ArrayList<>();
-            for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
-                StopDTO stopDTO = new StopDTO();
-                stopDTO.setAirportName("Example Airport"); // Replace with actual name
-                stopDTO.setAirportCode(segment.getArrival().getIataCode());
-                stopDTO.setLayoverTime(segment.getDuration());
-                stops.add(stopDTO);
-            }
-            flightDTO.setStops(stops);
+	private boolean isReturnDateBeforeDepartureDate(String departureDate, String returnDate) {
 
-            // Set prices
-            double totalPrice = Double.parseDouble(flightOffer.getPrice().getGrandTotal());
-            flightDTO.setTotalPrice(totalPrice);
-            int numberOfTravelers = flightOffer.getTravelerPricings().size();
-            flightDTO.setPricePerTraveler(totalPrice / numberOfTravelers);
+		return false;
+	}
 
-            // Set segments
-            List<SegmentDTO> segmentDTOs = new ArrayList<>();
-            for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
-                SegmentDTO segmentDTO = new SegmentDTO();
-                segmentDTO.setDepartureTime(segment.getDeparture().getAt());
-                segmentDTO.setArrivalTime(segment.getArrival().getAt());
-                segmentDTO.setDepartureAirportName("Example Departure Airport"); // Replace with actual name
-                segmentDTO.setDepartureAirportCode(segment.getDeparture().getIataCode());
-                segmentDTO.setArrivalAirportName("Example Arrival Airport"); // Replace with actual name
-                segmentDTO.setArrivalAirportCode(segment.getArrival().getIataCode());
-                segmentDTO.setCarrierCode(segment.getCarrierCode());
-                segmentDTO.setCarrierName("Example Carrier Name"); // Replace with actual name
-                segmentDTO.setFlightNumber(segment.getNumber());
-                segmentDTO.setOperatingCarrierCode(segment.getOperating().getCarrierCode());
-                segmentDTO.setOperatingCarrierName("Example Operating Carrier Name"); // Replace with actual name
-                segmentDTO.setAircraftType(segment.getAircraft().getCode());
-                segmentDTO.setCabin("Economy"); // Example, replace with actual cabin
-                segmentDTO.setFareBasis("GAA4PFDN"); // Example, replace with actual fare basis
-                segmentDTO.setFlightClass("G"); // Example, replace with actual class
+	private List<FlightOffer> parseFlights(String jsonResponse) {
+		List<FlightOffer> flightOffers = new ArrayList<>();
+		try {
+			JsonNode root = objectMapper.readTree(jsonResponse);
+			JsonNode data = root.path("data");
 
-             // Set amenities
-                List<AmenityDTO> amenities = new ArrayList<>();
-                for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
-                    for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
-                        if (fareDetails.getSegmentId().equals(segment.getId())) {
-                            for (Amenity amenity : fareDetails.getAmenities()) {
-                                AmenityDTO amenityDTO = new AmenityDTO();
-                                amenityDTO.setName(amenity.getDescription());
-                                amenityDTO.setChargeable(amenity.isChargeable());
-                                amenities.add(amenityDTO);
-                            }
-                        }
-                    }
-                }
-                segmentDTO.setAmenities(amenities);
+			for (JsonNode flightNode : data) {
+				FlightOffer flightOffer = objectMapper.treeToValue(flightNode, FlightOffer.class);
+				flightOffers.add(flightOffer);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return flightOffers;
+	}
 
+	private List<FlightDTO> convertToDTO(List<FlightOffer> flightOffers, String currency) {
+	    List<FlightDTO> flightDTOs = new ArrayList<>();
+	    List<AirlineDTO> airlines = getAirlines(); 
+	    List<AirportDTO> airports = getAirports(); 
 
-                // Set layover time
-                segmentDTO.setLayoverTime(segment.getDuration());
+	    for (FlightOffer flightOffer : flightOffers) {
+	        FlightDTO flightDTO = new FlightDTO();
+	        
+	        flightDTO.setId(UUID.randomUUID().toString());
+	        
+	        // Set initial and final departure/arrival times
+	        flightDTO.setInitialDepartureDateTime(flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getAt());
+	        flightDTO.setFinalArrivalDateTime(flightOffer.getItineraries().get(0).getSegments().get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getAt());
 
-                segmentDTOs.add(segmentDTO);
-            }
-            flightDTO.setSegments(segmentDTOs);
+	        // Set airport names and codes
+	        String departureAirportCode = flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getIataCode();
+	        String arrivalAirportCode = flightOffer.getItineraries().get(0).getSegments().get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getIataCode();
+	        flightDTO.setDepartureAirportCode(departureAirportCode);
+	        flightDTO.setDepartureAirportName(getAirportNameByCode(airports, departureAirportCode));
+	        flightDTO.setArrivalAirportCode(arrivalAirportCode);
+	        flightDTO.setArrivalAirportName(getAirportNameByCode(airports, arrivalAirportCode));
 
-            // Set price breakdown
-            PriceBreakdownDTO priceBreakdown = new PriceBreakdownDTO();
-            priceBreakdown.setBasePrice(flightOffer.getPrice().getBase());
-            priceBreakdown.setTotalPrice(flightOffer.getPrice().getGrandTotal());
-            List<FeeDTO> fees = new ArrayList<>();
-            for (Fee fee : flightOffer.getPrice().getFees()) {
-                FeeDTO feeDTO = new FeeDTO();
-                feeDTO.setAmount(fee.getAmount());
-                feeDTO.setType(fee.getType());
-                fees.add(feeDTO);
-            }
-            priceBreakdown.setFees(fees);
-            priceBreakdown.setPricePerTraveler(String.valueOf(flightDTO.getPricePerTraveler()));
-            flightDTO.setPriceBreakdown(priceBreakdown);
+	        // Set airline names and codes
+	        String carrierCode = flightOffer.getItineraries().get(0).getSegments().get(0).getCarrierCode();
+	        flightDTO.setAirlineCode(carrierCode);
+	        flightDTO.setAirlineName(getAirlineNameByCode(airlines, carrierCode));
 
-            flightDTOs.add(flightDTO);
-        }
-        return flightDTOs;
-    }
+	        String operatingCarrierCode = flightOffer.getItineraries().get(0).getSegments().get(0).getOperating().getCarrierCode();
+	        if (!carrierCode.equals(operatingCarrierCode)) {
+	            flightDTO.setOperatingAirlineCode(operatingCarrierCode);
+	            flightDTO.setOperatingAirlineName(getAirlineNameByCode(airlines, operatingCarrierCode));
+	        }
 
+	        // Set total flight time
+	        flightDTO.setTotalFlightTime(flightOffer.getItineraries().get(0).getDuration());
 
-    
+	        // Set stops
+	        List<StopDTO> stops = new ArrayList<>();
+	        for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
+	            StopDTO stopDTO = new StopDTO();
+	            stopDTO.setAirportCode(segment.getArrival().getIataCode());
+	            stopDTO.setAirportName(getAirportNameByCode(airports, segment.getArrival().getIataCode()));
+	            stopDTO.setLayoverTime(segment.getDuration());
+	            stops.add(stopDTO);
+	        }
+	        flightDTO.setStops(stops);
 
-    private String calculateLayoverTime(String arrivalDate, String departureDate) {
- 
-        return "layover time";
-    }
+	        // Set prices
+	        double totalPrice = Double.parseDouble(flightOffer.getPrice().getGrandTotal());
+	        flightDTO.setTotalPrice(totalPrice);
+	        int numberOfTravelers = flightOffer.getTravelerPricings().size();
+	        flightDTO.setPricePerTraveler(totalPrice / numberOfTravelers);
 
-    /*
-    public List<FlightDTO> sortFlights(List<FlightDTO> flightDTOs, String sortBy) {
-        if ("price".equalsIgnoreCase(sortBy)) {
-            flightDTOs.sort(Comparator.thenComparingDouble(FlightDTO::getPrice));
-        } else if ("duration".equalsIgnoreCase(sortBy)) {
-            flightDTOs.sort(Comparator.comparing(FlightDTO::getTotalTime));
-        }
-        return flightDTOs;
-    }*/
-    
-    public List<IataCodeDTO> getIataCodes(String keyword) {
-        String jsonResponse = mockFlight.getMockAirport();
-        List<IataCodeDTO> iataCodes = parseIataCodes(jsonResponse, keyword);
-        return iataCodes;
-    }
+	        // Set segments
+	        List<SegmentDTO> segmentDTOs = new ArrayList<>();
+	        for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
+	            SegmentDTO segmentDTO = new SegmentDTO();
+	            segmentDTO.setDepartureTime(segment.getDeparture().getAt());
+	            segmentDTO.setArrivalTime(segment.getArrival().getAt());
+	            segmentDTO.setDepartureAirportCode(segment.getDeparture().getIataCode());
+	            segmentDTO.setDepartureAirportName(getAirportNameByCode(airports, segment.getDeparture().getIataCode()));
+	            segmentDTO.setArrivalAirportCode(segment.getArrival().getIataCode());
+	            segmentDTO.setArrivalAirportName(getAirportNameByCode(airports, segment.getArrival().getIataCode()));
+	            segmentDTO.setCarrierCode(segment.getCarrierCode());
+	            segmentDTO.setCarrierName(getAirlineNameByCode(airlines, segment.getCarrierCode()));
+	            segmentDTO.setFlightNumber(segment.getNumber());
+	            segmentDTO.setOperatingCarrierCode(segment.getOperating().getCarrierCode());
+	            segmentDTO.setOperatingCarrierName(getAirlineNameByCode(airlines, segment.getOperating().getCarrierCode()));
+	            segmentDTO.setAircraftType(segment.getAircraft().getCode());
+
+	            // Obtener detalles de la cabina, base de tarifa y clase desde travelerPricing y fareDetailsBySegment
+	            for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
+	                for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
+	                    if (fareDetails.getSegmentId().equals(segment.getId())) {
+	                        segmentDTO.setCabin(fareDetails.getCabin());
+	                        segmentDTO.setFareBasis(fareDetails.getFareBasis());
+	                        segmentDTO.setFlightClass(fareDetails.getFlightClass());
+	                    }
+	                }
+	            }
+
+	            // Set amenities
+	            List<AmenityDTO> amenities = new ArrayList<>();
+	            for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
+	                for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
+	                    if (fareDetails.getSegmentId().equals(segment.getId())) {
+	                        for (Amenity amenity : fareDetails.getAmenities()) {
+	                            AmenityDTO amenityDTO = new AmenityDTO();
+	                            amenityDTO.setName(amenity.getDescription());
+	                            amenityDTO.setChargeable(amenity.isChargeable());
+	                            amenities.add(amenityDTO);
+	                        }
+	                    }
+	                }
+	            }
+	            segmentDTO.setAmenities(amenities);
+
+	            // Set layover time
+	            segmentDTO.setLayoverTime(segment.getDuration());
+
+	            segmentDTOs.add(segmentDTO);
+	        }
+	        flightDTO.setSegments(segmentDTOs);
+
+	        // Set price breakdown
+	        PriceBreakdownDTO priceBreakdown = new PriceBreakdownDTO();
+	        priceBreakdown.setBasePrice(flightOffer.getPrice().getBase());
+	        priceBreakdown.setTotalPrice(flightOffer.getPrice().getGrandTotal());
+	        List<FeeDTO> fees = new ArrayList<>();
+	        for (Fee fee : flightOffer.getPrice().getFees()) {
+	            FeeDTO feeDTO = new FeeDTO();
+	            feeDTO.setAmount(fee.getAmount());
+	            feeDTO.setType(fee.getType());
+	            fees.add(feeDTO);
+	        }
+	        priceBreakdown.setFees(fees);
+	        priceBreakdown.setPricePerTraveler(String.valueOf(flightDTO.getPricePerTraveler()));
+	        flightDTO.setPriceBreakdown(priceBreakdown);
+
+	        flightDTOs.add(flightDTO);
+	    }
+	    return flightDTOs;
+	}
+	private String calculateLayoverTime(String arrivalDate, String departureDate) {
+
+		return "layover time";
+	}
+
+	/*
+	 * public List<FlightDTO> sortFlights(List<FlightDTO> flightDTOs, String sortBy)
+	 * { if ("price".equalsIgnoreCase(sortBy)) {
+	 * flightDTOs.sort(Comparator.thenComparingDouble(FlightDTO::getPrice)); } else
+	 * if ("duration".equalsIgnoreCase(sortBy)) {
+	 * flightDTOs.sort(Comparator.comparing(FlightDTO::getTotalTime)); } return
+	 * flightDTOs; }
+	 */
+
+	public List<IataCodeDTO> getIataCodes(String keyword) {
+		String jsonResponse = mockFlight.getMockAirport();
+		List<IataCodeDTO> iataCodes = parseIataCodes(jsonResponse, keyword);
+		return iataCodes;
+	}
+
 
     private List<IataCodeDTO> parseIataCodes(String jsonResponse, String keyword) {
         List<IataCodeDTO> iataCodes = new ArrayList<>();
@@ -353,7 +417,8 @@ public class FlightService {
             for (JsonNode node : data) {
                 String name = node.path("name").asText();
                 String iataCode = node.path("iataCode").asText();
-                if (name.toLowerCase().contains(keyword.toLowerCase()) || iataCode.toLowerCase().contains(keyword.toLowerCase())) {
+                if (name.toLowerCase().contains(keyword.toLowerCase())
+                        || iataCode.toLowerCase().contains(keyword.toLowerCase())) {
                     IataCodeDTO iataCodeDTO = new IataCodeDTO();
                     iataCodeDTO.setName(name);
                     iataCodeDTO.setIataCode(iataCode);
@@ -365,8 +430,6 @@ public class FlightService {
         }
         return iataCodes;
     }
-
-
 
 }
 
