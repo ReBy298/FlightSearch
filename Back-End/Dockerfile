@@ -10,6 +10,12 @@ COPY src src
 
 RUN chmod +x ./gradlew
 RUN ./gradlew clean build --no-daemon
+RUN ls -la
+RUN ls -la build
+RUN ls -la build/libs
+RUN pwd
+
+
 
 # Etapa de ejecución
 FROM eclipse-temurin:17-jdk

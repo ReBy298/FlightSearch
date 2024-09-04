@@ -32,7 +32,7 @@ public class FlightController {
                                          @RequestParam(value = "sortBy", required = false) String sortBy) {
         List<FlightDTO> flights = flightService.getFlights(origin, destination, departureDate, returnDate, adults, max, currency, nonStop);
         if (sortBy != null) {
-            flights = flightService.sortFlights(flights, sortBy);
+            //flights = flightService.sortFlights(flights, sortBy);
         }
         return flights;
     }

@@ -1,6 +1,9 @@
 package com.flight_search.model;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.flight_search.dto.AmenityDTO;
 
 public class Segment {
     private Departure departure;
@@ -13,6 +16,8 @@ public class Segment {
     private String id;
     private int numberOfStops;
     private boolean blacklistedInEU;
+    
+    
 
 
     // Getters and Setters
@@ -95,5 +100,6 @@ public class Segment {
     public void setBlacklistedInEU(boolean blacklistedInEU) {
         this.blacklistedInEU = blacklistedInEU;
     }
+
 
 }

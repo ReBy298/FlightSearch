@@ -3,98 +3,121 @@ package com.flight_search.dto;
 import java.util.List;
 
 public class FlightDTO {
-    private String departureAirport;
-    private String arrivalAirport;
-    private String departureDate;
-    private String arrivalDate;
-    private String airline;
-    private String operatingAirline;
-    private String totalTime;
-    private double price;
+    private String initialDepartureDateTime;
+    private String finalArrivalDateTime;
+    private String departureAirportName;
+    private String departureAirportCode;
+    private String arrivalAirportName;
+    private String arrivalAirportCode;
+    private String airlineName;
+    private String airlineCode;
+    private String operatingAirlineName;
+    private String operatingAirlineCode;
+    private String totalFlightTime;
+    private List<StopDTO> stops;
+    private double totalPrice;
     private double pricePerTraveler;
     private List<SegmentDTO> segments;
+    private PriceBreakdownDTO priceBreakdown;
     
     
-
-   
-    public String getOperatingAirline() {
-		return operatingAirline;
+	public PriceBreakdownDTO getPriceBreakdown() {
+		return priceBreakdown;
 	}
-
-	public void setOperatingAirline(String operatingAirline) {
-		this.operatingAirline = operatingAirline;
+	public void setPriceBreakdown(PriceBreakdownDTO priceBreakdown) {
+		this.priceBreakdown = priceBreakdown;
 	}
-
-	public String getTotalTime() {
-		return totalTime;
+	public String getInitialDepartureDateTime() {
+		return initialDepartureDateTime;
 	}
-
-	public void setTotalTime(String totalTime) {
-		this.totalTime = totalTime;
+	public void setInitialDepartureDateTime(String initialDepartureDateTime) {
+		this.initialDepartureDateTime = initialDepartureDateTime;
 	}
-
+	public String getFinalArrivalDateTime() {
+		return finalArrivalDateTime;
+	}
+	public void setFinalArrivalDateTime(String finalArrivalDateTime) {
+		this.finalArrivalDateTime = finalArrivalDateTime;
+	}
+	public String getDepartureAirportName() {
+		return departureAirportName;
+	}
+	public void setDepartureAirportName(String departureAirportName) {
+		this.departureAirportName = departureAirportName;
+	}
+	public String getDepartureAirportCode() {
+		return departureAirportCode;
+	}
+	public void setDepartureAirportCode(String departureAirportCode) {
+		this.departureAirportCode = departureAirportCode;
+	}
+	public String getArrivalAirportName() {
+		return arrivalAirportName;
+	}
+	public void setArrivalAirportName(String arrivalAirportName) {
+		this.arrivalAirportName = arrivalAirportName;
+	}
+	public String getArrivalAirportCode() {
+		return arrivalAirportCode;
+	}
+	public void setArrivalAirportCode(String arrivalAirportCode) {
+		this.arrivalAirportCode = arrivalAirportCode;
+	}
+	public String getAirlineName() {
+		return airlineName;
+	}
+	public void setAirlineName(String airlineName) {
+		this.airlineName = airlineName;
+	}
+	public String getAirlineCode() {
+		return airlineCode;
+	}
+	public void setAirlineCode(String airlineCode) {
+		this.airlineCode = airlineCode;
+	}
+	public String getOperatingAirlineName() {
+		return operatingAirlineName;
+	}
+	public void setOperatingAirlineName(String operatingAirlineName) {
+		this.operatingAirlineName = operatingAirlineName;
+	}
+	public String getOperatingAirlineCode() {
+		return operatingAirlineCode;
+	}
+	public void setOperatingAirlineCode(String operatingAirlineCode) {
+		this.operatingAirlineCode = operatingAirlineCode;
+	}
+	public String getTotalFlightTime() {
+		return totalFlightTime;
+	}
+	public void setTotalFlightTime(String totalFlightTime) {
+		this.totalFlightTime = totalFlightTime;
+	}
+	public List<StopDTO> getStops() {
+		return stops;
+	}
+	public void setStops(List<StopDTO> stops) {
+		this.stops = stops;
+	}
+	public double getTotalPrice() {
+		return totalPrice;
+	}
+	public void setTotalPrice(double totalPrice) {
+		this.totalPrice = totalPrice;
+	}
 	public double getPricePerTraveler() {
 		return pricePerTraveler;
 	}
-
 	public void setPricePerTraveler(double pricePerTraveler) {
 		this.pricePerTraveler = pricePerTraveler;
 	}
-
-	// Getters and Setters
-    public String getDepartureAirport() {
-        return departureAirport;
-    }
-
-    public void setDepartureAirport(String departureAirport) {
-        this.departureAirport = departureAirport;
-    }
-
-    public String getArrivalAirport() {
-        return arrivalAirport;
-    }
-
-    public void setArrivalAirport(String arrivalAirport) {
-        this.arrivalAirport = arrivalAirport;
-    }
-
-    public String getDepartureDate() {
-        return departureDate;
-    }
-
-    public void setDepartureDate(String departureDate) {
-        this.departureDate = departureDate;
-    }
-
-    public String getArrivalDate() {
-        return arrivalDate;
-    }
-
-    public void setArrivalDate(String arrivalDate) {
-        this.arrivalDate = arrivalDate;
-    }
-
-    public String getAirline() {
-        return airline;
-    }
-
-    public void setAirline(String airline) {
-        this.airline = airline;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public List<SegmentDTO> getSegments() {
-        return segments;
-    }
-
-    public void setSegments(List<SegmentDTO> segments) {
-        this.segments = segments;
-    }
+	public List<SegmentDTO> getSegments() {
+		return segments;
+	}
+	public void setSegments(List<SegmentDTO> segments) {
+		this.segments = segments;
+	}
+    
+    
+    
 }

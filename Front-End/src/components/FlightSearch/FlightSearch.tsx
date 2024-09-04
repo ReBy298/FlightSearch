@@ -27,21 +27,21 @@ const FlightSearch: React.FC = () => {
                     method: 'GET',
                     headers: {
                         "Content-Type": "application/json",
-                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Origin': 'http://localhost:3000',
                         "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
                         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
-                        }
-                  }
-                  
+                    }
+                }
+
             );
             const data = await response.json();
-    
+
             // Añadir el campo currency a cada vuelo
             const flightsWithCurrency = data.map((flight: any) => ({
                 ...flight,
                 currency: currency
             }));
-    
+
             console.log(flightsWithCurrency);
             // Navegar a la página de resultados con los datos obtenidos
             navigate('/results', { state: { flights: flightsWithCurrency } });
@@ -81,7 +81,7 @@ const FlightSearch: React.FC = () => {
                                 label="Departure Date"
                                 value={departureDate}
                                 onChange={(newValue: Date | null) => setDepartureDate(newValue)}
-                                
+
                             />
                         </LocalizationProvider>
                     </Grid>
@@ -91,7 +91,7 @@ const FlightSearch: React.FC = () => {
                                 label="Return Date"
                                 value={returnDate}
                                 onChange={(newValue: Date | null) => setReturnDate(newValue)}
-                                
+
                             />
                         </LocalizationProvider>
                     </Grid>
