@@ -49,7 +49,7 @@ const FlightSearch: React.FC = () => {
         const formattedDepartureDate = departureDate ? departureDate.toISOString().split('T')[0] : '';
         const formattedReturnDate = returnDate ? returnDate.toISOString().split('T')[0] : '';
 
-        const url = `http://localhost:9090/api/flights/search?origin=${departure}&destination=${arrival}&departureDate=${formattedDepartureDate}&returnDate=${formattedReturnDate}&adults=2&nonStop=${nonStop}&max=3&currency=${currency}`;
+        const url = `http://localhost:9090/api/flights/search?origin=${departure}&destination=${arrival}&departureDate=${formattedDepartureDate}&returnDate=${formattedReturnDate}&adults=1&nonStop=${nonStop}&max=3&currency=${currency}`;
 
         try {
             const response = await fetch(url,
@@ -76,7 +76,15 @@ const FlightSearch: React.FC = () => {
 
             console.log(flightsWithCurrency);
             // Navegar a la página de resultados con los datos obtenidos
-            navigate('/results', { state: { flights: flightsWithCurrency } });
+            navigate('/results', { state: {
+                flights: flightsWithCurrency,
+                departure,
+                arrival,
+                departureDate: formattedDepartureDate,
+                returnDate: formattedReturnDate,
+                nonStop,
+                currency
+            } });
         } catch (error) {
             console.error('Error fetching flight data:', error);
         }

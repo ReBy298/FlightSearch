@@ -21,21 +21,20 @@ public class FlightController {
     private FlightService flightService;
 
     @GetMapping("/search")
-    public List<FlightDTO> searchFlights(@RequestParam("origin") String origin,
-                                         @RequestParam("destination") String destination,
+    public List<FlightDTO> searchFlights(@RequestParam("origin") String departure,
+                                         @RequestParam("destination") String arrival,
                                          @RequestParam("departureDate") String departureDate,
                                          @RequestParam("returnDate") String returnDate,
                                          @RequestParam("adults") int adults,
                                          @RequestParam("nonStop") boolean nonStop,
                                          @RequestParam("max") int max,
                                          @RequestParam("currency") String currency,
-                                         @RequestParam(value = "sortBy", required = false) String sortBy) {
-        List<FlightDTO> flights = flightService.getFlights(origin, destination, departureDate, returnDate, adults, max, currency, nonStop);
-        if (sortBy != null) {
-            //flights = flightService.sortFlights(flights, sortBy);
-        }
-        return flights;
+                                         @RequestParam(value = "orderPrice", required = false) String orderPrice,
+                                         @RequestParam(value = "orderDuration", required = false) String orderDuration) {
+        return flightService.getFlights(departure,arrival, departureDate, returnDate, adults, max, currency, nonStop, orderPrice, orderDuration);
     }
+
+
 
     @GetMapping("/iata-codes")
     public List<IataCodeDTO> searchIataCodes(@RequestParam("keyword") String keyword) {

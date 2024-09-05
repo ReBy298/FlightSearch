@@ -18,7 +18,10 @@ import com.flight_search.model.Fee;
 import com.flight_search.model.FlightOffer;
 import com.flight_search.model.Segment;
 import com.flight_search.model.TravelerPricing;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -149,8 +152,8 @@ public class FlightService {
 	 * throw new RuntimeException("Failed to search flights", e); } }
 	 */
 
-	public List<FlightDTO> getFlights(String origin, String destination, String departureDate, String returnDate,
-			int adults, int max, String currency, boolean nonStop) {
+	public List<FlightDTO> getFlights(String departure, String arrival, String departureDate, String returnDate,
+			int adults, int max, String currency, boolean nonStop, String orderPrice, String orderDuration) {
 		if (isDateInPast(departureDate) || (returnDate != null && isDateInPast(returnDate))
 				|| (returnDate != null && isReturnDateBeforeDepartureDate(departureDate, returnDate))) {
 			throw new IllegalArgumentException("Invalid dates");
@@ -161,7 +164,9 @@ public class FlightService {
 
 		List<FlightDTO> flightDTOs = convertToDTO(flightOffers, currency);
 
-		// sortFlights(flightDTOs, sortBy);
+		if (orderPrice != null || orderDuration != null) {
+			flightDTOs = sortFlights(flightDTOs, orderPrice, orderDuration);
+		}
 
 		return flightDTOs;
 	}
@@ -228,14 +233,14 @@ public class FlightService {
 		}
 		return airports;
 	}
-	
+
 	private String getAirportNameByCode(List<AirportDTO> airports, String iataCode) {
-	    for (AirportDTO airport : airports) {
-	        if (airport.getIataCode().equals(iataCode)) {
-	            return airport.getName();
-	        }
-	    }
-	    return "Unknown Airport";
+		for (AirportDTO airport : airports) {
+			if (airport.getIataCode().equals(iataCode)) {
+				return airport.getName();
+			}
+		}
+		return "Unknown Airport";
 	}
 
 	private boolean isDateInPast(String date) {
@@ -264,142 +269,176 @@ public class FlightService {
 		return flightOffers;
 	}
 
+	private Duration calculateDuration(String departureTime, String arrivalTime) {
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+		LocalDateTime departure = LocalDateTime.parse(departureTime, formatter);
+		LocalDateTime arrival = LocalDateTime.parse(arrivalTime, formatter);
+
+		if (arrival.isBefore(departure)) {
+			arrival = arrival.plusDays(1);
+		}
+
+		return Duration.between(departure, arrival);
+	}
+
 	private List<FlightDTO> convertToDTO(List<FlightOffer> flightOffers, String currency) {
-	    List<FlightDTO> flightDTOs = new ArrayList<>();
-	    List<AirlineDTO> airlines = getAirlines(); 
-	    List<AirportDTO> airports = getAirports(); 
+		List<FlightDTO> flightDTOs = new ArrayList<>();
+		List<AirlineDTO> airlines = getAirlines();
+		List<AirportDTO> airports = getAirports();
 
-	    for (FlightOffer flightOffer : flightOffers) {
-	        FlightDTO flightDTO = new FlightDTO();
-	        
-	        flightDTO.setId(UUID.randomUUID().toString());
-	        
-	        // Set initial and final departure/arrival times
-	        flightDTO.setInitialDepartureDateTime(flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getAt());
-	        flightDTO.setFinalArrivalDateTime(flightOffer.getItineraries().get(0).getSegments().get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getAt());
+		for (FlightOffer flightOffer : flightOffers) {
+			FlightDTO flightDTO = new FlightDTO();
 
-	        // Set airport names and codes
-	        String departureAirportCode = flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getIataCode();
-	        String arrivalAirportCode = flightOffer.getItineraries().get(0).getSegments().get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getIataCode();
-	        flightDTO.setDepartureAirportCode(departureAirportCode);
-	        flightDTO.setDepartureAirportName(getAirportNameByCode(airports, departureAirportCode));
-	        flightDTO.setArrivalAirportCode(arrivalAirportCode);
-	        flightDTO.setArrivalAirportName(getAirportNameByCode(airports, arrivalAirportCode));
+			flightDTO.setId(UUID.randomUUID().toString());
 
-	        // Set airline names and codes
-	        String carrierCode = flightOffer.getItineraries().get(0).getSegments().get(0).getCarrierCode();
-	        flightDTO.setAirlineCode(carrierCode);
-	        flightDTO.setAirlineName(getAirlineNameByCode(airlines, carrierCode));
+			// Set initial and final departure/arrival times
+			flightDTO.setInitialDepartureDateTime(
+					flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture().getAt());
+			flightDTO.setFinalArrivalDateTime(flightOffer.getItineraries().get(0).getSegments()
+					.get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getAt());
 
-	        String operatingCarrierCode = flightOffer.getItineraries().get(0).getSegments().get(0).getOperating().getCarrierCode();
-	        if (!carrierCode.equals(operatingCarrierCode)) {
-	            flightDTO.setOperatingAirlineCode(operatingCarrierCode);
-	            flightDTO.setOperatingAirlineName(getAirlineNameByCode(airlines, operatingCarrierCode));
-	        }
+			// Set airport names and codes
+			String departureAirportCode = flightOffer.getItineraries().get(0).getSegments().get(0).getDeparture()
+					.getIataCode();
+			String arrivalAirportCode = flightOffer.getItineraries().get(0).getSegments()
+					.get(flightOffer.getItineraries().get(0).getSegments().size() - 1).getArrival().getIataCode();
+			flightDTO.setDepartureAirportCode(departureAirportCode);
+			flightDTO.setDepartureAirportName(getAirportNameByCode(airports, departureAirportCode));
+			flightDTO.setArrivalAirportCode(arrivalAirportCode);
+			flightDTO.setArrivalAirportName(getAirportNameByCode(airports, arrivalAirportCode));
 
-	        // Set total flight time
-	        flightDTO.setTotalFlightTime(flightOffer.getItineraries().get(0).getDuration());
+			// Set airline names and codes
+			String carrierCode = flightOffer.getItineraries().get(0).getSegments().get(0).getCarrierCode();
+			flightDTO.setAirlineCode(carrierCode);
+			flightDTO.setAirlineName(getAirlineNameByCode(airlines, carrierCode));
 
-	        // Set stops
-	        List<StopDTO> stops = new ArrayList<>();
-	        for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
-	            StopDTO stopDTO = new StopDTO();
-	            stopDTO.setAirportCode(segment.getArrival().getIataCode());
-	            stopDTO.setAirportName(getAirportNameByCode(airports, segment.getArrival().getIataCode()));
-	            stopDTO.setLayoverTime(segment.getDuration());
-	            stops.add(stopDTO);
-	        }
-	        flightDTO.setStops(stops);
+			String operatingCarrierCode = flightOffer.getItineraries().get(0).getSegments().get(0).getOperating()
+					.getCarrierCode();
+			if (!carrierCode.equals(operatingCarrierCode)) {
+				flightDTO.setOperatingAirlineCode(operatingCarrierCode);
+				flightDTO.setOperatingAirlineName(getAirlineNameByCode(airlines, operatingCarrierCode));
+			}
 
-	        // Set prices
-	        double totalPrice = Double.parseDouble(flightOffer.getPrice().getGrandTotal());
-	        flightDTO.setTotalPrice(totalPrice);
-	        int numberOfTravelers = flightOffer.getTravelerPricings().size();
-	        flightDTO.setPricePerTraveler(totalPrice / numberOfTravelers);
+			// Set total flight time
+			Duration totalFlightTime = Duration.ZERO;
+			for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
+				totalFlightTime = totalFlightTime
+						.plus(calculateDuration(segment.getDeparture().getAt(), segment.getArrival().getAt()));
+			}
+			flightDTO.setTotalFlightTime(totalFlightTime.toString());
 
-	        // Set segments
-	        List<SegmentDTO> segmentDTOs = new ArrayList<>();
-	        for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
-	            SegmentDTO segmentDTO = new SegmentDTO();
-	            segmentDTO.setDepartureTime(segment.getDeparture().getAt());
-	            segmentDTO.setArrivalTime(segment.getArrival().getAt());
-	            segmentDTO.setDepartureAirportCode(segment.getDeparture().getIataCode());
-	            segmentDTO.setDepartureAirportName(getAirportNameByCode(airports, segment.getDeparture().getIataCode()));
-	            segmentDTO.setArrivalAirportCode(segment.getArrival().getIataCode());
-	            segmentDTO.setArrivalAirportName(getAirportNameByCode(airports, segment.getArrival().getIataCode()));
-	            segmentDTO.setCarrierCode(segment.getCarrierCode());
-	            segmentDTO.setCarrierName(getAirlineNameByCode(airlines, segment.getCarrierCode()));
-	            segmentDTO.setFlightNumber(segment.getNumber());
-	            segmentDTO.setOperatingCarrierCode(segment.getOperating().getCarrierCode());
-	            segmentDTO.setOperatingCarrierName(getAirlineNameByCode(airlines, segment.getOperating().getCarrierCode()));
-	            segmentDTO.setAircraftType(segment.getAircraft().getCode());
+			// Set stops
+			List<StopDTO> stops = new ArrayList<>();
+			for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
+				StopDTO stopDTO = new StopDTO();
+				stopDTO.setAirportCode(segment.getArrival().getIataCode());
+				stopDTO.setAirportName(getAirportNameByCode(airports, segment.getArrival().getIataCode()));
+				stopDTO.setLayoverTime(segment.getDuration());
+				stops.add(stopDTO);
+			}
+			flightDTO.setStops(stops);
 
-	            // Obtener detalles de la cabina, base de tarifa y clase desde travelerPricing y fareDetailsBySegment
-	            for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
-	                for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
-	                    if (fareDetails.getSegmentId().equals(segment.getId())) {
-	                        segmentDTO.setCabin(fareDetails.getCabin());
-	                        segmentDTO.setFareBasis(fareDetails.getFareBasis());
-	                        segmentDTO.setFlightClass(fareDetails.getFlightClass());
-	                    }
-	                }
-	            }
+			// Set prices
+			double totalPrice = Double.parseDouble(flightOffer.getPrice().getGrandTotal());
+			flightDTO.setTotalPrice(totalPrice);
+			int numberOfTravelers = flightOffer.getTravelerPricings().size();
+			flightDTO.setPricePerTraveler(totalPrice / numberOfTravelers);
 
-	            // Set amenities
-	            List<AmenityDTO> amenities = new ArrayList<>();
-	            for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
-	                for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
-	                    if (fareDetails.getSegmentId().equals(segment.getId())) {
-	                        for (Amenity amenity : fareDetails.getAmenities()) {
-	                            AmenityDTO amenityDTO = new AmenityDTO();
-	                            amenityDTO.setName(amenity.getDescription());
-	                            amenityDTO.setChargeable(amenity.isChargeable());
-	                            amenities.add(amenityDTO);
-	                        }
-	                    }
-	                }
-	            }
-	            segmentDTO.setAmenities(amenities);
+			// Set segments
+			int counter = 0;
+			List<SegmentDTO> segmentDTOs = new ArrayList<>();
+			for (Segment segment : flightOffer.getItineraries().get(0).getSegments()) {
+				SegmentDTO segmentDTO = new SegmentDTO();
+				counter = counter + 1;
+				segmentDTO.setDepartureTime(segment.getDeparture().getAt());
+				segmentDTO.setArrivalTime(segment.getArrival().getAt());
+				segmentDTO.setDepartureAirportCode(segment.getDeparture().getIataCode());
+				segmentDTO
+						.setDepartureAirportName(getAirportNameByCode(airports, segment.getDeparture().getIataCode()));
+				segmentDTO.setArrivalAirportCode(segment.getArrival().getIataCode());
+				segmentDTO.setArrivalAirportName(getAirportNameByCode(airports, segment.getArrival().getIataCode()));
+				segmentDTO.setCarrierCode(segment.getCarrierCode());
+				segmentDTO.setCarrierName(getAirlineNameByCode(airlines, segment.getCarrierCode()));
+				segmentDTO.setFlightNumber(segment.getNumber());
+				segmentDTO.setOperatingCarrierCode(segment.getOperating().getCarrierCode());
+				segmentDTO.setOperatingCarrierName(
+						getAirlineNameByCode(airlines, segment.getOperating().getCarrierCode()));
+				segmentDTO.setAircraftType(segment.getAircraft().getCode());
 
-	            // Set layover time
-	            segmentDTO.setLayoverTime(segment.getDuration());
+				// FareDetails
+				for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
+					for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
+						if (fareDetails.getSegmentId().equals(segment.getId())) {
+							segmentDTO.setCabin(fareDetails.getCabin());
+							segmentDTO.setFareBasis(fareDetails.getFareBasis());
+							segmentDTO.setFlightClass(fareDetails.getFlightClass());
+						}
+					}
+				}
 
-	            segmentDTOs.add(segmentDTO);
-	        }
-	        flightDTO.setSegments(segmentDTOs);
+				// Set amenities
+				List<AmenityDTO> amenities = new ArrayList<>();
+				for (TravelerPricing travelerPricing : flightOffer.getTravelerPricings()) {
+					for (FareDetailsBySegment fareDetails : travelerPricing.getFareDetailsBySegment()) {
+						if (fareDetails.getSegmentId().equals(segment.getId())) {
+							for (Amenity amenity : fareDetails.getAmenities()) {
+								AmenityDTO amenityDTO = new AmenityDTO();
+								amenityDTO.setName(amenity.getDescription());
+								amenityDTO.setChargeable(amenity.isChargeable());
+								amenities.add(amenityDTO);
+							}
+						}
+					}
+				}
+				segmentDTO.setAmenities(amenities);
 
-	        // Set price breakdown
-	        PriceBreakdownDTO priceBreakdown = new PriceBreakdownDTO();
-	        priceBreakdown.setBasePrice(flightOffer.getPrice().getBase());
-	        priceBreakdown.setTotalPrice(flightOffer.getPrice().getGrandTotal());
-	        List<FeeDTO> fees = new ArrayList<>();
-	        for (Fee fee : flightOffer.getPrice().getFees()) {
-	            FeeDTO feeDTO = new FeeDTO();
-	            feeDTO.setAmount(fee.getAmount());
-	            feeDTO.setType(fee.getType());
-	            fees.add(feeDTO);
-	        }
-	        priceBreakdown.setFees(fees);
-	        priceBreakdown.setPricePerTraveler(String.valueOf(flightDTO.getPricePerTraveler()));
-	        flightDTO.setPriceBreakdown(priceBreakdown);
+				// Set layover time
+				segmentDTO.setLayoverTime(segment.getDuration());
 
-	        flightDTOs.add(flightDTO);
+				segmentDTOs.add(segmentDTO);
+			}
+			flightDTO.setSegments(segmentDTOs);
+
+			// Set price breakdown
+			PriceBreakdownDTO priceBreakdown = new PriceBreakdownDTO();
+			priceBreakdown.setBasePrice(flightOffer.getPrice().getBase());
+			priceBreakdown.setTotalPrice(flightOffer.getPrice().getGrandTotal());
+			List<FeeDTO> fees = new ArrayList<>();
+			for (Fee fee : flightOffer.getPrice().getFees()) {
+				FeeDTO feeDTO = new FeeDTO();
+				feeDTO.setAmount(fee.getAmount());
+				feeDTO.setType(fee.getType());
+				fees.add(feeDTO);
+			}
+			priceBreakdown.setFees(fees);
+			priceBreakdown.setPricePerTraveler(String.valueOf(flightDTO.getPricePerTraveler()));
+			flightDTO.setPriceBreakdown(priceBreakdown);
+
+			flightDTOs.add(flightDTO);
+		}
+		return flightDTOs;
+	}
+
+	public List<FlightDTO> sortFlights(List<FlightDTO> flights, String orderPrice, String orderDuration) {
+	    Comparator<FlightDTO> comparator = Comparator.comparing(FlightDTO::getTotalPrice);
+
+	    if ("desc".equalsIgnoreCase(orderPrice)) {
+	        comparator = comparator.reversed();
 	    }
-	    return flightDTOs;
-	}
-	private String calculateLayoverTime(String arrivalDate, String departureDate) {
 
-		return "layover time";
+	    if (orderDuration != null) {
+	        Comparator<FlightDTO> durationComparator = Comparator.comparing(flight -> Duration.parse(flight.getTotalFlightTime()));
+	        if ("desc".equalsIgnoreCase(orderDuration)) {
+	            durationComparator = durationComparator.reversed();
+	        }
+	        comparator = comparator.thenComparing(durationComparator);
+	    }
+
+	    flights.sort(comparator);
+
+	    return flights;
 	}
 
-	/*
-	 * public List<FlightDTO> sortFlights(List<FlightDTO> flightDTOs, String sortBy)
-	 * { if ("price".equalsIgnoreCase(sortBy)) {
-	 * flightDTOs.sort(Comparator.thenComparingDouble(FlightDTO::getPrice)); } else
-	 * if ("duration".equalsIgnoreCase(sortBy)) {
-	 * flightDTOs.sort(Comparator.comparing(FlightDTO::getTotalTime)); } return
-	 * flightDTOs; }
-	 */
 
 	public List<IataCodeDTO> getIataCodes(String keyword) {
 		String jsonResponse = mockFlight.getMockAirport();
@@ -407,29 +446,28 @@ public class FlightService {
 		return iataCodes;
 	}
 
+	private List<IataCodeDTO> parseIataCodes(String jsonResponse, String keyword) {
+		List<IataCodeDTO> iataCodes = new ArrayList<>();
+		try {
+			JsonNode root = objectMapper.readTree(jsonResponse);
+			JsonNode data = root.path("data");
 
-    private List<IataCodeDTO> parseIataCodes(String jsonResponse, String keyword) {
-        List<IataCodeDTO> iataCodes = new ArrayList<>();
-        try {
-            JsonNode root = objectMapper.readTree(jsonResponse);
-            JsonNode data = root.path("data");
-
-            for (JsonNode node : data) {
-                String name = node.path("name").asText();
-                String iataCode = node.path("iataCode").asText();
-                if (name.toLowerCase().contains(keyword.toLowerCase())
-                        || iataCode.toLowerCase().contains(keyword.toLowerCase())) {
-                    IataCodeDTO iataCodeDTO = new IataCodeDTO();
-                    iataCodeDTO.setName(name);
-                    iataCodeDTO.setIataCode(iataCode);
-                    iataCodes.add(iataCodeDTO);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return iataCodes;
-    }
+			for (JsonNode node : data) {
+				String name = node.path("name").asText();
+				String iataCode = node.path("iataCode").asText();
+				if (name.toLowerCase().contains(keyword.toLowerCase())
+						|| iataCode.toLowerCase().contains(keyword.toLowerCase())) {
+					IataCodeDTO iataCodeDTO = new IataCodeDTO();
+					iataCodeDTO.setName(name);
+					iataCodeDTO.setIataCode(iataCode);
+					iataCodes.add(iataCodeDTO);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return iataCodes;
+	}
 
 }
 
