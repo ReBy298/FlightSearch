@@ -20,15 +20,13 @@ To use this project, you might need:
 ## Docker 
 
 - [Docker Install](https://www.docker.com/products/docker-desktop/)
-## or 
-
 
 ## Podman 
 
 - [Podman Install](https://podman.io/docs/installation)
 
 
-on your computer. You also need to have an account in the tool you choose and the corresponding images.
+one of this two tools on your computer. You also need to have an account in the tool you choose and the corresponding images.
 
 ## Docker/Podman Commands
 ### Build the Project
