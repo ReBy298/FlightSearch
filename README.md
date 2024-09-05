@@ -20,8 +20,8 @@ To use this project, you might need:
 ## Docker 
 
 - [Docker Install](https://www.docker.com/products/docker-desktop/)
+## or 
 
-# or 
 
 ## Podman 
 
