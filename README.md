@@ -79,10 +79,16 @@ To run the tests for the application, use the following command:
 ## Front-End: React TypeScript Application
 The front-end of this project is a React application written in TypeScript. It runs on `localhost` at port `3000`.
 
+### Download Dependencies 
+To download the dependencies, use the following command: 
+```
+npm install
+```
+
 ### Building the Application 
 To construct the application, use the following command: 
 ```
-npm install
+npm build
 ```
 ### Running the Application
 To start the application, use the following command:
