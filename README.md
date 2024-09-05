@@ -18,15 +18,14 @@ This project can be built using the docker-compose file. Both the front-end and 
 To use this project, you might need: 
 
 ## Docker 
-```
+
 - [Docker Install](https://www.docker.com/products/docker-desktop/)
-```
 or 
 ## Podman 
-```
+
 - [Podman Install](https://podman.io/docs/installation)
 
-```
+
 on your computer. You also need to have an account in the tool you choose and the corresponding images.
 
 ## Docker/Podman Commands
@@ -36,7 +35,7 @@ podman-compose build
 ```
 or
 
-`` `
+```
 docker-compose build
 ```
 ### Run the Project
