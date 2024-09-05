@@ -46,7 +46,7 @@ or
 ```
 docker-compose up
 ```
-### Stoping the Dockerized App
+### Stopping the Dockerized App
 ```
 podman-compose down
 ```
