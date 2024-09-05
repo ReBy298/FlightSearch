@@ -23,7 +23,6 @@ const FlightSearch: React.FC = () => {
     }, [keyword]);
 
     useEffect(() => {
-        // Map `iataCodes` to a list of `iataCode` strings for options
         const newOptions = iataCodes.map((option: any) => option.iataCode);
         setOptions(newOptions);
     }, [iataCodes]);
@@ -79,14 +78,14 @@ const FlightSearch: React.FC = () => {
             );
             const data = await response.json();
 
-            // Añadir el campo currency a cada vuelo
+   
             const flightsWithCurrency = data.map((flight: any) => ({
                 ...flight,
                 currency: currency
             }));
 
             console.log(flightsWithCurrency);
-            // Navegar a la página de resultados con los datos obtenidos
+         
             navigate('/results', {
                 state: {
                     flights: flightsWithCurrency,
@@ -113,7 +112,7 @@ const FlightSearch: React.FC = () => {
                     <Grid item xs={12}>
                         <Autocomplete
                             freeSolo
-                            options={options} // Use the mapped options here
+                            options={options} 
                             value={departure}
                             onInputChange={(event, newInputValue) => {
                                 setDeparture(newInputValue);
@@ -132,7 +131,7 @@ const FlightSearch: React.FC = () => {
                     <Grid item xs={12}>
                         <Autocomplete
                             freeSolo
-                            options={options} // Use the mapped options here
+                            options={options} 
                             value={arrival}
                             onInputChange={(event, newInputValue) => {
                                 setArrival(newInputValue);

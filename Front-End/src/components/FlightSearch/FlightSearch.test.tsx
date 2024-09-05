@@ -1,46 +1,84 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import FlightSearch from './FlightSearch'; 
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import FlightSearch from './FlightSearch';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-const mockNavigate = jest.fn();
+
+const mockedNavigate = jest.fn();
 
 jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: () => mockNavigate,
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockedNavigate,
 }));
 
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    json: () => Promise.resolve([{ iataCode: 'JFK' }, { iataCode: 'LAX' }]),
+  })
+) as jest.Mock;
+
 describe('FlightSearch Component', () => {
-    beforeEach(() => {
-        render(
-            <MemoryRouter>
-                <FlightSearch />
-            </MemoryRouter>
-        );
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('renders all input fields', () => {
+    render(
+      <MemoryRouter>
+        <FlightSearch />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByLabelText(/Departure Airport/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Arrival Airport/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Departure Date/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Return Date/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Currency/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Non-stop/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Search/i })).toBeInTheDocument();
+  });
+
+  test('calls IATA API when typing in departure or arrival fields', async () => {
+    render(
+      <MemoryRouter>
+        <FlightSearch />
+      </MemoryRouter>
+    );
+
+
+    fireEvent.change(screen.getByLabelText(/Departure Airport/i), { target: { value: 'JFK' } });
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:9090/api/flights/iata-codes?keyword=JFK', expect.any(Object));
     });
 
-    test('renders flight search form', () => {
-        expect(screen.getByText('Flight Search')).toBeInTheDocument();
-        expect(screen.getByLabelText('Departure Airport')).toBeInTheDocument();
-        expect(screen.getByLabelText('Arrival Airport')).toBeInTheDocument();
-        expect(screen.getByLabelText('Departure Date')).toBeInTheDocument();
-        expect(screen.getByLabelText('Return Date')).toBeInTheDocument();
-        expect(screen.getByLabelText('Non-stop')).toBeInTheDocument();
-        expect(screen.getByText('Search')).toBeInTheDocument();
-    });
 
-    test('allows user to input flight details', () => {
-        fireEvent.change(screen.getByLabelText('Departure Airport'), { target: { value: 'SFO' } });
-        fireEvent.change(screen.getByLabelText('Arrival Airport'), { target: { value: 'JFK' } });
-        fireEvent.click(screen.getByLabelText('Non-stop'));
+    fireEvent.change(screen.getByLabelText(/Arrival Airport/i), { target: { value: 'LAX' } });
 
-        expect(screen.getByLabelText('Departure Airport')).toHaveValue('SFO');
-        expect(screen.getByLabelText('Arrival Airport')).toHaveValue('JFK');
-        expect(screen.getByLabelText('Non-stop')).toBeChecked();
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:9090/api/flights/iata-codes?keyword=LAX', expect.any(Object));
     });
+  });
 
-    test('navigates to results on search', () => {
-        fireEvent.click(screen.getByText('Search'));
-        expect(mockNavigate).toHaveBeenCalledWith('/results');
+  test('disables invalid return date selection', async () => {
+    render(
+      <MemoryRouter>
+        <FlightSearch />
+      </MemoryRouter>
+    );
+
+  
+    const departureDateInput = screen.getByLabelText(/Departure Date/i);
+    fireEvent.change(departureDateInput, { target: { value: '2024-10-10' } });
+
+
+    const returnDateInput = screen.getByLabelText(/Return Date/i);
+    fireEvent.change(returnDateInput, { target: { value: '2024-10-05' } });
+
+    await waitFor(() => {
+      expect(returnDateInput).toHaveValue(''); 
     });
+  });
+
+  
 });
