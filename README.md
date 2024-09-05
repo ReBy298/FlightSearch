@@ -4,13 +4,13 @@ Search Flights App is a web application built with React TypeScript for the fron
 ## Prerequisites
 
 ## Front-End
-NODE JS --v 22
-NPM --v 10
+- NODE JS --v 22
+- NPM --v 10
 
-# Back-End
-Java --v 17
-Spring Boot 
-Gradle 
+## Back-End
+- Java --v 17
+- Spring Boot 
+- Gradle 
 
 ## Dockerized App
 This project can be built using the docker-compose file. Both the front-end and back-end have their own Dockerfile. Below are the commands to build, run, and stop the application using either Podman or Docker.
@@ -19,12 +19,13 @@ To use this project, you might need:
 
 ## Docker 
 ```
-https://www.docker.com/products/docker-desktop/
+- [Docker Install](https://www.docker.com/products/docker-desktop/)
 ```
 or 
 ## Podman 
 ```
-https://podman.io/docs/installation
+- [Podman Install](https://podman.io/docs/installation)
+
 ```
 on your computer. You also need to have an account in the tool you choose and the corresponding images.
 
@@ -32,9 +33,10 @@ on your computer. You also need to have an account in the tool you choose and th
 ### Build the Project
 ```
 podman-compose build
-``
+```
 or
-`` 
+
+`` `
 docker-compose build
 ```
 ### Run the Project
