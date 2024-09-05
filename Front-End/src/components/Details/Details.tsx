@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Container, Typography, Grid, Paper, Button } from '@mui/material';
 
@@ -7,15 +7,38 @@ const Details: React.FC = () => {
     const { flightId } = useParams<{ flightId: string }>();
     const location = useLocation();
     const flightData = location.state?.flights || [];
-    const flight = flightData.find((f: any) => f.id === flightId);
+    const flight = flightData.find((f: any) => location.state.id === flightId);
 
+    const [departure, setDeparture] = useState('');
+    const [arrival, setArrival] = useState('');
+    const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
+    const [returnDate, setReturnDate] = useState<Date | null>(null);
+    const [nonStop, setNonStop] = useState(false);
+    const [currency, setCurrency] = useState('USD');
+    const [counter, setCounter] = useState(0);
+
+    useEffect(() => {
+        setDeparture(location.state.departure);
+        setArrival(location.state.arrival);
+        setDepartureDate(location.state.departureDate);
+        setReturnDate(location.state.returnDate);
+        setNonStop(location.state.nonStop);
+        setCurrency(location.state.currency);
+    }, [flightData, departure,arrival,departureDate,returnDate,nonStop,currency]);
     if (!flight) {
         return <Typography variant="h6">Flight not found</Typography>;
     }
 
     return (
         <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Button onClick={() => navigate('/results', { state: { flights: flightData } })} variant="outlined" sx={{ mb: 2 }}>
+        <Button onClick={() => navigate('/results', { state: { flights: flightData,
+            departure,
+            arrival,
+            departureDate,
+            returnDate,
+            nonStop,
+            currency
+         } })} variant="outlined" sx={{ mb: 2 }}>
             « Return to Results
         </Button>
         <Typography variant="h4" gutterBottom>Flight Details</Typography>

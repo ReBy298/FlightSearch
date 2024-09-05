@@ -6,6 +6,12 @@ const Results: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const flightData = location.state?.flights || [];
+    const [departure, setDeparture] = useState('');
+    const [arrival, setArrival] = useState('');
+    const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
+    const [returnDate, setReturnDate] = useState<Date | null>(null);
+    const [nonStop, setNonStop] = useState(false);
+    const [currency, setCurrency] = useState('USD');
 
     const [sortedData, setSortedData] = useState(flightData);
     const [priceSort, setPriceSort] = useState('asc');
@@ -13,10 +19,26 @@ const Results: React.FC = () => {
 
     useEffect(() => {
         setSortedData(flightData);
-    }, [flightData]);
+        handleSort();
+        setDeparture(location.state.departure);
+        setArrival(location.state.arrival);
+        setDepartureDate(location.state.departureDate);
+        setReturnDate(location.state.returnDate);
+        setNonStop(location.state.nonStop);
+        setCurrency(location.state.currency);
+    }, [flightData, departure,arrival,departureDate,returnDate,nonStop,currency]);
+
 
     const handleDetails = (flightId: string) => {
-        navigate(`/details/${flightId}`, { state: { flights: flightData } });
+        navigate(`/details/${flightId}`, { state: { flights: flightData,
+            id : flightId,
+            departure,
+            arrival,
+            departureDate,
+            returnDate,
+            nonStop,
+            currency 
+        } });
     };
 
     const formatTime = (dateTime: string) => {
