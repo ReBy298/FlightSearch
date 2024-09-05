@@ -26,7 +26,7 @@ To use this project, you might need:
 - [Podman Install](https://podman.io/docs/installation)
 
 
-one of this two tools on your computer. You also need to have an account in the tool you choose and the corresponding images.
+one of this two tools on your computer. You also need to have an account in the tool you choose and the corresponding base images.
 
 ## Docker/Podman Commands
 ### Build the Project
