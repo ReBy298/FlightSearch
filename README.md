@@ -60,6 +60,12 @@ To run the app without Docker Compose, follow these steps. Make sure to start th
 ### Back-End: Spring Boot Application
 The back-end of this project is a Spring Boot application built with Java 17 and Gradle and it runs on `localhost` at port `9090`.
 
+### Building the Application
+To construct the application, use the following command:
+```
+./gradlew build
+```
+
 ### Running the Application
 To start the application, use the following command:
 ```
