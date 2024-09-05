@@ -29,7 +29,7 @@ To use this project, you might need:
 one of this two tools on your computer. You also need to have an account in the tool you choose and the corresponding base images.
 
 ## Docker/Podman Commands
-### Build the Project
+### Building the Dockerized App
 ```
 podman-compose build
 ```
@@ -38,7 +38,7 @@ or
 ```
 docker-compose build
 ```
-### Run the Project
+### Running the Dockerized App
 ```
 podman-compose up
 ```
@@ -46,7 +46,7 @@ or
 ```
 docker-compose up
 ```
-### Stop the Project
+### Stoping the Dockerized App
 ```
 podman-compose down
 ```
