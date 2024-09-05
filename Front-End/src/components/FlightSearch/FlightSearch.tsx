@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Box, Typography, Grid, TextField, FormControlLabel, Checkbox, Button, MenuItem, Select, InputLabel, FormControl, Autocomplete } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -8,31 +8,42 @@ const FlightSearch: React.FC = () => {
     const [departure, setDeparture] = useState('');
     const [arrival, setArrival] = useState('');
     const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
+    const [options, setOptions] = useState<string[]>([]);
     const [returnDate, setReturnDate] = useState<Date | null>(null);
     const [nonStop, setNonStop] = useState(false);
     const [currency, setCurrency] = useState('USD');
-    const [iataCodes, setIataCodes] = useState([]);
+    const [iataCodes, setIataCodes] = useState<any[]>([]);
+    const [keyword, setKeyword] = useState('');
     const navigate = useNavigate();
 
+    useEffect(() => {
+        if (keyword) {
+            handleIataCodeSearch(keyword);
+        }
+    }, [keyword]);
 
-    const handleIataCodeSearch = async (keyword: string) => {
+    useEffect(() => {
+        // Map `iataCodes` to a list of `iataCode` strings for options
+        const newOptions = iataCodes.map((option: any) => option.iataCode);
+        setOptions(newOptions);
+    }, [iataCodes]);
+
+
+    const handleIataCodeSearch = async (keyword: any) => {
         const url = `http://localhost:9090/api/flights/iata-codes?keyword=${keyword}`;
 
         try {
-            const response = await fetch(url,
-                {
-                    credentials: 'include',
-                    mode: 'cors',
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json",
-                        'Access-Control-Allow-Origin': 'http://localhost:3000',
-                        "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
-                        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
-                    }
+            const response = await fetch(url, {
+                credentials: 'include',
+                mode: 'cors',
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                    'Access-Control-Allow-Origin': 'http://localhost:3000',
+                    "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
                 }
-
-            );
+            });
             const data = await response.json();
             setIataCodes(data);
         } catch (error) {
@@ -76,15 +87,17 @@ const FlightSearch: React.FC = () => {
 
             console.log(flightsWithCurrency);
             // Navegar a la página de resultados con los datos obtenidos
-            navigate('/results', { state: {
-                flights: flightsWithCurrency,
-                departure,
-                arrival,
-                departureDate: formattedDepartureDate,
-                returnDate: formattedReturnDate,
-                nonStop,
-                currency
-            } });
+            navigate('/results', {
+                state: {
+                    flights: flightsWithCurrency,
+                    departure,
+                    arrival,
+                    departureDate: formattedDepartureDate,
+                    returnDate: formattedReturnDate,
+                    nonStop,
+                    currency
+                }
+            });
         } catch (error) {
             console.error('Error fetching flight data:', error);
         }
@@ -100,19 +113,18 @@ const FlightSearch: React.FC = () => {
                     <Grid item xs={12}>
                         <Autocomplete
                             freeSolo
-                            options={iataCodes.map((option: any) => option.iataCode)}
+                            options={options} // Use the mapped options here
+                            value={departure}
                             onInputChange={(event, newInputValue) => {
                                 setDeparture(newInputValue);
-                                handleIataCodeSearch(newInputValue);
+                                setKeyword(newInputValue);
                             }}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    fullWidth
                                     label="Departure Airport"
-                                    value={departure}
-                                    onChange={(e) => setDeparture(e.target.value)}
-                                    required
+                                    variant="standard"
+                                    fullWidth
                                 />
                             )}
                         />
@@ -120,19 +132,18 @@ const FlightSearch: React.FC = () => {
                     <Grid item xs={12}>
                         <Autocomplete
                             freeSolo
-                            options={iataCodes.map((option: any) => option.iataCode)}
+                            options={options} // Use the mapped options here
+                            value={arrival}
                             onInputChange={(event, newInputValue) => {
                                 setArrival(newInputValue);
-                                handleIataCodeSearch(newInputValue);
+                                setKeyword(newInputValue);
                             }}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    fullWidth
                                     label="Arrival Airport"
-                                    value={arrival}
-                                    onChange={(e) => setArrival(e.target.value)}
-                                    required
+                                    variant="standard"
+                                    fullWidth
                                 />
                             )}
                         />
