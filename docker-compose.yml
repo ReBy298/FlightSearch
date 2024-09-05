@@ -1,0 +1,19 @@
+
+services:
+  frontend:
+    image: flight-searc-frontend
+    build:
+      context: ./Front-End
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    container_name: frontend_container
+
+  backend:
+    image: flight-search-backend
+    build:
+      context: ./Back-End
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    container_name: backend_container

@@ -1,14 +1,23 @@
-# Usa una imagen base de OpenJDK 17
-FROM openjdk:17-jdk-alpine
+# Etapa de construcción
+FROM eclipse-temurin:17-jdk as builder
+WORKDIR /Back-End
 
-# Establece el directorio de trabajo dentro del contenedor
-WORKDIR /app
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+COPY src src
 
-# Copia el archivo JAR generado por Gradle al contenedor
-COPY build/libs/*.jar app.jar
+RUN chmod +x ./gradlew
+RUN ./gradlew clean build --no-daemon
 
-# Expone el puerto en el que la aplicación Spring Boot se ejecutará
-EXPOSE 8080
 
-# Define el comando para ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
+# Etapa de ejecución
+FROM eclipse-temurin:17-jdk
+WORKDIR /Back-End
+COPY --from=builder /Back-End/build/libs/Back-End-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 9090
+
+ENTRYPOINT ["java", "-jar", "/Back-End/app.jar"]

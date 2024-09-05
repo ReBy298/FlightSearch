@@ -1,22 +1,28 @@
-FROM node:20-alpine
+# Etapa 1: Construcción
+FROM node:22-alpine AS build
 
-LABEL authors="Aby"
-
-WORKDIR /app
+WORKDIR /Front-End
 
 # Copia los archivos de dependencias primero
-COPY package.json package-lock.json ./  
-COPY src ./
-COPY public ./
+COPY package.json package-lock.json ./
 
-# Instala las dependencias
-RUN npm install
+# Limpiar caché de npm e instalar dependencias
+RUN npm cache clean --force && npm install
 
 # Copia el resto de los archivos
 COPY . .
 
-# Expone el puerto que usará la aplicación
+# Construye la aplicación
+RUN npm run build
+
+# Etapa 2: Imagen final
+FROM node:22-alpine
+
+WORKDIR /Front-End
+
+# Copia los archivos construidos desde la etapa anterior
+COPY --from=build /Front-End .
+
 EXPOSE 3000
 
-# Comando para iniciar la aplicación
-CMD ["npm" ,"start"]
+CMD ["npm", "start"]

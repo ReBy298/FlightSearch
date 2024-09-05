@@ -1,20 +1,105 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, TextField, Button, Checkbox, FormControlLabel, Typography, Grid, Box } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Container, Box, Typography, Grid, TextField, FormControlLabel, Checkbox, Button, MenuItem, Select, InputLabel, FormControl, Autocomplete } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { useNavigate } from 'react-router-dom';
 
 const FlightSearch: React.FC = () => {
     const [departure, setDeparture] = useState('');
     const [arrival, setArrival] = useState('');
-    const [departureDate, setDepartureDate] = useState<Date | null>(null);
+    const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
+    const [options, setOptions] = useState<string[]>([]);
     const [returnDate, setReturnDate] = useState<Date | null>(null);
     const [nonStop, setNonStop] = useState(false);
+    const [currency, setCurrency] = useState('USD');
+    const [iataCodes, setIataCodes] = useState<any[]>([]);
+    const [keyword, setKeyword] = useState('');
     const navigate = useNavigate();
 
-    const handleSearch = () => {
-        // Perform validation and API call here
-        navigate('/results');
+    useEffect(() => {
+        if (keyword) {
+            handleIataCodeSearch(keyword);
+        }
+    }, [keyword]);
+
+    useEffect(() => {
+        const newOptions = iataCodes.map((option: any) => option.iataCode);
+        setOptions(newOptions);
+    }, [iataCodes]);
+
+
+    const handleIataCodeSearch = async (keyword: any) => {
+        const url = `http://localhost:9090/api/flights/iata-codes?keyword=${keyword}`;
+
+        try {
+            const response = await fetch(url, {
+                credentials: 'include',
+                mode: 'cors',
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                    'Access-Control-Allow-Origin': 'http://localhost:3000',
+                    "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
+                }
+            });
+            const data = await response.json();
+            setIataCodes(data);
+        } catch (error) {
+            console.error('Error fetching IATA codes:', error);
+        }
+    };
+
+    const handleSearch = async () => {
+
+        if (!departure || !arrival || !departureDate || !currency) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        const formattedDepartureDate = departureDate ? departureDate.toISOString().split('T')[0] : '';
+        const formattedReturnDate = returnDate ? returnDate.toISOString().split('T')[0] : '';
+
+        const url = `http://localhost:9090/api/flights/search?origin=${departure}&destination=${arrival}&departureDate=${formattedDepartureDate}&returnDate=${formattedReturnDate}&adults=1&nonStop=${nonStop}&max=3&currency=${currency}`;
+
+        try {
+            const response = await fetch(url,
+                {
+                    credentials: 'include',
+                    mode: 'cors',
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                        'Access-Control-Allow-Origin': 'http://localhost:3000',
+                        "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
+                    }
+                }
+
+            );
+            const data = await response.json();
+
+   
+            const flightsWithCurrency = data.map((flight: any) => ({
+                ...flight,
+                currency: currency
+            }));
+
+            console.log(flightsWithCurrency);
+         
+            navigate('/results', {
+                state: {
+                    flights: flightsWithCurrency,
+                    departure,
+                    arrival,
+                    departureDate: formattedDepartureDate,
+                    returnDate: formattedReturnDate,
+                    nonStop,
+                    currency
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching flight data:', error);
+        }
     };
 
     return (
@@ -25,19 +110,41 @@ const FlightSearch: React.FC = () => {
                 </Typography>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Departure Airport"
+                        <Autocomplete
+                            freeSolo
+                            options={options} 
                             value={departure}
-                            onChange={(e) => setDeparture(e.target.value)}
+                            onInputChange={(event, newInputValue) => {
+                                setDeparture(newInputValue);
+                                setKeyword(newInputValue);
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Departure Airport"
+                                    variant="standard"
+                                    fullWidth
+                                />
+                            )}
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Arrival Airport"
+                        <Autocomplete
+                            freeSolo
+                            options={options} 
                             value={arrival}
-                            onChange={(e) => setArrival(e.target.value)}
+                            onInputChange={(event, newInputValue) => {
+                                setArrival(newInputValue);
+                                setKeyword(newInputValue);
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Arrival Airport"
+                                    variant="standard"
+                                    fullWidth
+                                />
+                            )}
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -45,8 +152,8 @@ const FlightSearch: React.FC = () => {
                             <DatePicker
                                 label="Departure Date"
                                 value={departureDate}
-                                onChange={(newValue) => setDepartureDate(newValue)}
-                            //renderInput={(params) => <TextField {...params} fullWidth />}
+                                onChange={(newValue: Date | null) => setDepartureDate(newValue)}
+                                minDate={new Date()}
                             />
                         </LocalizationProvider>
                     </Grid>
@@ -55,10 +162,29 @@ const FlightSearch: React.FC = () => {
                             <DatePicker
                                 label="Return Date"
                                 value={returnDate}
-                                onChange={(newValue) => setReturnDate(newValue)}
-                            //renderInput={(params) => <TextField {...params} fullWidth />}
+                                onChange={(newValue: Date | null) => setReturnDate(newValue)}
+                                shouldDisableDate={(date) => {
+                                    if (!departureDate) return false;
+                                    return date < departureDate;
+                                }}
                             />
                         </LocalizationProvider>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <FormControl fullWidth>
+                            <InputLabel id="currency-label">Currency</InputLabel>
+                            <Select
+                                labelId="currency-label"
+                                value={currency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                                label="Currency"
+                            >
+                                <MenuItem value="USD">USD</MenuItem>
+                                <MenuItem value="MXN">MXN</MenuItem>
+                                <MenuItem value="EUR">EUR</MenuItem>
+
+                            </Select>
+                        </FormControl>
                     </Grid>
                     <Grid item xs={12}>
                         <FormControlLabel
